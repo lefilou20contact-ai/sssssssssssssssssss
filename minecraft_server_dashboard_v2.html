@@ -1,0 +1,283 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.dash { padding: 1rem 0; font-family: var(--font-sans); }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.title { font-size: 18px; font-weight: 500; color: var(--color-text-primary); display: flex; align-items: center; gap: 8px; }
+.btn { background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 6px 12px; font-size: 13px; color: var(--color-text-primary); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s; }
+.btn:hover { background: var(--color-background-secondary); }
+.btn.danger { border-color: #A32D2D; color: #A32D2D; }
+.btn.danger:hover { background: #FCEBEB; }
+.btn.success { border-color: #3B6D11; color: #3B6D11; }
+.btn.success:hover { background: #EAF3DE; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+.card.online { border-left: 3px solid #3B6D11; }
+.card.offline { border-left: 3px solid #A32D2D; }
+.card.loading { border-left: 3px solid #BA7517; }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.server-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); font-family: var(--font-mono); }
+.status-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 500; }
+.status-badge.online { background: #EAF3DE; color: #3B6D11; }
+.status-badge.offline { background: #FCEBEB; color: #A32D2D; }
+.status-badge.loading { background: #FAEEDA; color: #854F0B; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.stat { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 10px; }
+.stat-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 2px; }
+.stat-value { font-size: 16px; font-weight: 500; color: var(--color-text-primary); }
+.motd { font-size: 12px; color: var(--color-text-secondary); margin-top: 8px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.players-list { margin-top: 8px; }
+.players-list span { display: inline-block; background: var(--color-background-secondary); border-radius: 4px; padding: 2px 6px; margin: 2px 2px 2px 0; font-family: var(--font-mono); font-size: 11px; color: var(--color-text-primary); }
+.bar-bg { background: var(--color-border-tertiary); border-radius: 4px; height: 4px; margin-top: 8px; }
+.bar-fill { height: 4px; border-radius: 4px; background: #639922; transition: width 0.5s; }
+.bar-fill.red { background: #E24B4A; }
+.bar-fill.amber { background: #EF9F27; }
+.footer-info { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--color-text-secondary); }
+.refresh-info { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-text-secondary); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #639922; display: inline-block; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+.section-title { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 10px; }
+.summary-bar { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 1.5rem; }
+.sum-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 14px; text-align: center; }
+.sum-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+.sum-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.admin-panel { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-top: 1rem; }
+.admin-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+.form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.form-row input { flex: 1; font-size: 13px; font-family: var(--font-mono); }
+.server-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); margin-bottom: 6px; }
+.server-row-name { font-size: 13px; font-family: var(--font-mono); color: var(--color-text-primary); }
+.auth-box { text-align: center; padding: 1rem; }
+.auth-box p { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 12px; }
+.auth-row { display: flex; gap: 8px; justify-content: center; }
+.auth-row input { width: 180px; font-size: 14px; text-align: center; letter-spacing: 3px; }
+.error-msg { color: #A32D2D; font-size: 12px; margin-top: 6px; }
+</style>
+
+<div class="dash">
+  <div class="header">
+    <div class="title">
+      <i class="ti ti-server" aria-hidden="true"></i>
+      Minecraft server monitor
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div class="refresh-info">
+        <span class="dot"></span>
+        <span id="next-refresh">Actualisation dans 30s</span>
+      </div>
+      <button class="btn" onclick="refreshAll()"><i class="ti ti-refresh" aria-hidden="true"></i> Actualiser</button>
+      <button class="btn" onclick="toggleAdmin()"><i class="ti ti-lock" aria-hidden="true"></i> Admin</button>
+    </div>
+  </div>
+
+  <div class="summary-bar">
+    <div class="sum-card"><div class="sum-label">Serveurs en ligne</div><div class="sum-value" id="sum-online" style="color:#3B6D11">—</div></div>
+    <div class="sum-card"><div class="sum-label">Joueurs connectés</div><div class="sum-value" id="sum-players">—</div></div>
+    <div class="sum-card"><div class="sum-label">Ping moyen</div><div class="sum-value" id="sum-ping">—</div></div>
+  </div>
+
+  <div class="section-title">Serveurs Java surveillés</div>
+  <div class="grid" id="server-grid"></div>
+
+  <div id="admin-gate" style="display:none;">
+    <div class="admin-panel">
+      <div id="auth-section">
+        <div class="auth-box">
+          <p><i class="ti ti-lock" style="font-size:20px;" aria-hidden="true"></i><br><br>Accès administrateur</p>
+          <div class="auth-row">
+            <input type="password" id="pwd-input" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')checkPwd()" />
+            <button class="btn success" onclick="checkPwd()">Connexion</button>
+          </div>
+          <div class="error-msg" id="auth-error" style="display:none;">Mot de passe incorrect.</div>
+        </div>
+      </div>
+      <div id="admin-content" style="display:none;">
+        <div class="admin-title"><i class="ti ti-settings" aria-hidden="true"></i> Gestion des serveurs</div>
+        <div id="admin-list"></div>
+        <div class="form-row" style="margin-top:12px;">
+          <input type="text" id="new-ip" placeholder="IP ou domaine du serveur Java" />
+          <button class="btn success" onclick="addServer()"><i class="ti ti-plus" aria-hidden="true"></i> Ajouter</button>
+        </div>
+        <div class="error-msg" id="add-error" style="display:none;"></div>
+        <div style="margin-top:12px;padding-top:12px;border-top:0.5px solid var(--color-border-tertiary);display:flex;justify-content:flex-end;">
+          <button class="btn danger" onclick="logout()"><i class="ti ti-logout" aria-hidden="true"></i> Déconnexion</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://mcping.me/api/java/';
+const ADMIN_PWD = '130812';
+const DEFAULT_SERVERS = ['167.234.38.64','87.230.21.48','51.75.141.67','135.125.28.169'];
+const STORAGE_KEY = 'mc_servers_java_v1';
+
+let servers = [];
+let serverData = {};
+let countdown = 30;
+let countdownTimer = null;
+let adminOpen = false;
+let authed = false;
+
+function stripCodes(str) {
+  return str ? str.replace(/§[0-9a-fklmnor]/gi, '') : '';
+}
+
+async function loadServers() {
+  try {
+    const r = await window.storage.get(STORAGE_KEY);
+    servers = r && r.value ? JSON.parse(r.value) : [...DEFAULT_SERVERS];
+  } catch(e) { servers = [...DEFAULT_SERVERS]; }
+}
+
+async function saveServers() {
+  try { await window.storage.set(STORAGE_KEY, JSON.stringify(servers)); } catch(e) {}
+}
+
+function renderCard(ip) {
+  const d = serverData[ip];
+  const status = d === undefined ? 'loading' : (d === null ? 'offline' : 'online');
+  let inner = '';
+
+  if (status === 'online') {
+    const pct = d.players.maximum > 0 ? Math.round((d.players.online / d.players.maximum) * 100) : 0;
+    const barClass = pct > 80 ? 'red' : pct > 50 ? 'amber' : '';
+    const pingColor = d.latency < 50 ? '#3B6D11' : d.latency < 150 ? '#BA7517' : '#A32D2D';
+    const pingLabel = d.latency < 50 ? 'Excellent' : d.latency < 150 ? 'Bon' : 'Élevé';
+    const motd = stripCodes(d.motd);
+    let playersHtml = '';
+    if (d.players.sample && d.players.sample.length > 0) {
+      const shown = d.players.sample.slice(0, 5);
+      playersHtml = `<div class="players-list">${shown.map(p=>`<span>${p.name}</span>`).join('')}${d.players.sample.length > 5 ? `<span>+${d.players.sample.length-5}</span>` : ''}</div>`;
+    }
+    inner = `
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Joueurs</div><div class="stat-value" style="color:#3B6D11">${d.players.online} / ${d.players.maximum}</div></div>
+        <div class="stat"><div class="stat-label">Ping</div><div class="stat-value">${d.latency} ms</div></div>
+        <div class="stat"><div class="stat-label">Version</div><div class="stat-value" style="font-size:13px;">${d.version.broadcast}</div></div>
+        <div class="stat"><div class="stat-label">Remplissage</div><div class="stat-value">${pct}%</div></div>
+      </div>
+      <div class="bar-bg"><div class="bar-fill ${barClass}" style="width:${Math.min(pct,100)}%"></div></div>
+      ${motd ? `<div class="motd">${motd}</div>` : ''}
+      ${playersHtml}
+      <div class="footer-info"><span>Protocole ${d.version.protocol}</span><span style="color:${pingColor}">${pingLabel}</span></div>
+    `;
+  } else if (status === 'offline') {
+    inner = `<div style="margin-top:8px;font-size:13px;color:var(--color-text-secondary);">Impossible de joindre le serveur.</div>`;
+  } else {
+    inner = `<div style="margin-top:8px;font-size:13px;color:#BA7517;">Vérification en cours...</div>`;
+  }
+
+  return `<div class="card ${status}">
+    <div class="card-header">
+      <span class="server-name">${ip}</span>
+      <span class="status-badge ${status}">${status === 'online' ? 'En ligne' : status === 'offline' ? 'Hors ligne' : 'Vérification...'}</span>
+    </div>
+    ${inner}
+  </div>`;
+}
+
+function renderGrid() {
+  document.getElementById('server-grid').innerHTML = servers.map(renderCard).join('');
+  updateSummary();
+}
+
+function updateSummary() {
+  const online = servers.filter(ip => serverData[ip] && serverData[ip] !== null);
+  const totalPlayers = online.reduce((s, ip) => s + serverData[ip].players.online, 0);
+  const avgPing = online.length ? Math.round(online.reduce((s, ip) => s + serverData[ip].latency, 0) / online.length) : 0;
+  document.getElementById('sum-online').textContent = `${online.length} / ${servers.length}`;
+  document.getElementById('sum-players').textContent = totalPlayers;
+  document.getElementById('sum-ping').textContent = online.length ? `${avgPing} ms` : '—';
+}
+
+async function pingServer(ip) {
+  try {
+    const res = await fetch(`${API_BASE}${ip}`);
+    if (!res.ok) { serverData[ip] = null; return; }
+    serverData[ip] = await res.json();
+  } catch(e) { serverData[ip] = null; }
+}
+
+async function refreshAll() {
+  renderGrid();
+  await Promise.all(servers.map(ip => pingServer(ip)));
+  renderGrid();
+  resetCountdown();
+}
+
+function resetCountdown() {
+  countdown = 30;
+  if (countdownTimer) clearInterval(countdownTimer);
+  countdownTimer = setInterval(() => {
+    countdown--;
+    const el = document.getElementById('next-refresh');
+    if (el) el.textContent = `Actualisation dans ${countdown}s`;
+    if (countdown <= 0) { clearInterval(countdownTimer); refreshAll(); }
+  }, 1000);
+}
+
+function toggleAdmin() {
+  adminOpen = !adminOpen;
+  document.getElementById('admin-gate').style.display = adminOpen ? 'block' : 'none';
+  if (!adminOpen) logout();
+}
+
+function checkPwd() {
+  if (document.getElementById('pwd-input').value === ADMIN_PWD) {
+    document.getElementById('auth-section').style.display = 'none';
+    document.getElementById('admin-content').style.display = 'block';
+    document.getElementById('auth-error').style.display = 'none';
+    renderAdminList();
+  } else {
+    document.getElementById('auth-error').style.display = 'block';
+    document.getElementById('pwd-input').value = '';
+  }
+}
+
+function renderAdminList() {
+  document.getElementById('admin-list').innerHTML = servers.map(ip => `
+    <div class="server-row">
+      <span class="server-row-name">${ip}</span>
+      <button class="btn danger" onclick="removeServer('${ip}')"><i class="ti ti-trash" aria-hidden="true"></i> Supprimer</button>
+    </div>
+  `).join('');
+}
+
+async function addServer() {
+  const input = document.getElementById('new-ip');
+  const ip = input.value.trim();
+  const err = document.getElementById('add-error');
+  if (!ip) { err.textContent = 'Entre une IP ou un nom de domaine.'; err.style.display='block'; return; }
+  if (servers.includes(ip)) { err.textContent = 'Ce serveur est déjà dans la liste.'; err.style.display='block'; return; }
+  err.style.display = 'none';
+  servers.push(ip);
+  await saveServers();
+  input.value = '';
+  renderAdminList();
+  renderGrid();
+  pingServer(ip).then(() => renderGrid());
+}
+
+async function removeServer(ip) {
+  servers = servers.filter(s => s !== ip);
+  delete serverData[ip];
+  await saveServers();
+  renderAdminList();
+  renderGrid();
+}
+
+function logout() {
+  authed = false;
+  document.getElementById('auth-section').style.display = 'block';
+  document.getElementById('admin-content').style.display = 'none';
+  document.getElementById('pwd-input').value = '';
+}
+
+(async () => {
+  await loadServers();
+  renderGrid();
+  await refreshAll();
+})();
+</script>
